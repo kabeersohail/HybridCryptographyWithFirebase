@@ -7,27 +7,18 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hybridcryptographywithfirebase.models.EncryptedMessage
 import com.example.hybridcryptographywithfirebase.utils.Constants
-import com.example.hybridcryptographywithfirebase.utils.Constants.AES_CRYPTO_ALGORITHM
-import com.example.hybridcryptographywithfirebase.utils.Constants.AES_KEY_SIZE
-import com.example.hybridcryptographywithfirebase.utils.Constants.AES_TRANSFORMATION
 import com.example.hybridcryptographywithfirebase.utils.Constants.CRYPTOGRAPHY
 import com.example.hybridcryptographywithfirebase.utils.Constants.ENCRYPTED_MESSAGE
-import com.example.hybridcryptographywithfirebase.utils.Constants.IV_BUFFER
 import com.example.hybridcryptographywithfirebase.utils.Constants.RSA_CRYPTO_ALGORITHM
 import com.example.hybridcryptographywithfirebase.utils.Constants.RSA_KEY_SIZE
-import com.example.hybridcryptographywithfirebase.utils.Constants.RSA_TRANSFORMATION
 import com.example.hybridcryptographywithfirebase.utils.TAG
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import java.nio.charset.Charset
-import java.security.KeyFactory
-import java.security.KeyPair
-import java.security.KeyPairGenerator
-import java.security.PublicKey
+import java.security.*
+import java.security.spec.InvalidKeySpecException
 import java.security.spec.X509EncodedKeySpec
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
+import javax.crypto.*
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.coroutines.resume
@@ -74,42 +65,52 @@ class MainViewModel: ViewModel() {
         }
     }
 
-    fun encryptMessage(receiversPublicKey: String, messageToBeEncrypted: String) = try {
-        /**
-         * Generate secret key using AES
-         */
-        val keyGenerator: KeyGenerator = KeyGenerator.getInstance(AES_CRYPTO_ALGORITHM)
-        keyGenerator.init(AES_KEY_SIZE)
-        val secretKey: SecretKey = keyGenerator.generateKey()
+    fun encryptMessage(receiversPublicKey: String, messageToBeEncrypted: String) {
+        try {
 
-        /**
-         * Encrypt message using secret key
-         */
-        val raw: ByteArray = secretKey.encoded
-        val secretKeySpec = SecretKeySpec(raw, AES_CRYPTO_ALGORITHM)
-        val cipher: Cipher = Cipher.getInstance(AES_TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, IvParameterSpec(byteArrayOf(16)))
-        val cipherText: String = Base64.encodeToString(cipher.doFinal(messageToBeEncrypted.toByteArray(Charset.forName("UTF-8"))), Base64.DEFAULT)
+            // 1. generate secret key using AES
+            val keyGenerator = KeyGenerator.getInstance("AES")
+            keyGenerator.init(128) // AES is currently available in three key sizes: 128, 192 and 256 bits.The design and strength of all key lengths of the AES algorithm are sufficient to protect classified information up to the SECRET level
+            val secretKey = keyGenerator.generateKey()
 
-        /**
-         * Get public key
-         */
-        val publicSpec = X509EncodedKeySpec(Base64.decode(receiversPublicKey, Base64.DEFAULT))
-        val keyFactory: KeyFactory = KeyFactory.getInstance(RSA_CRYPTO_ALGORITHM)
-        val publicKey: PublicKey = keyFactory.generatePublic(publicSpec)
+            // 3. encrypt string using secret key
+            val raw = secretKey.encoded
+            val skeySpec = SecretKeySpec(raw, "AES")
+            val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, IvParameterSpec(ByteArray(16)))
+            val cipherTextString = Base64.encodeToString(
+                cipher.doFinal(messageToBeEncrypted.toByteArray(Charset.forName("UTF-8"))),
+                Base64.DEFAULT
+            )
 
-        /**
-         * Encrypt secret key using receiver's public key
-         */
+            // 4. get public key
+            val publicSpec = X509EncodedKeySpec(Base64.decode(receiversPublicKey, Base64.DEFAULT))
+            val keyFactory = KeyFactory.getInstance("RSA")
+            val publicKey = keyFactory.generatePublic(publicSpec)
 
-        val cipher2: Cipher = Cipher.getInstance(RSA_TRANSFORMATION)
-        cipher2.init(Cipher.ENCRYPT_MODE, publicKey)
-        val encryptedSecretKey = Base64.encodeToString(cipher2.doFinal(secretKey.encoded), Base64.DEFAULT)
+            // 6. encrypt secret key using public key
+            val cipher2 = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding")
+            cipher2.init(Cipher.ENCRYPT_MODE, publicKey)
+            val encryptedSecretKey =
+                Base64.encodeToString(cipher2.doFinal(secretKey.encoded), Base64.DEFAULT)
 
-        _encryptedMessage.postValue(EncryptedMessage(encryptedSecretKey, cipherText))
+            _encryptedMessage.postValue(EncryptedMessage(encryptedSecretKey, cipherTextString))
 
-    } catch (e: Exception) {
-        e.printStackTrace()
+        } catch (e: NoSuchAlgorithmException) {
+            e.printStackTrace()
+        } catch (e: InvalidKeyException) {
+            e.printStackTrace()
+        } catch (e: NoSuchPaddingException) {
+            e.printStackTrace()
+        } catch (e: IllegalBlockSizeException) {
+            e.printStackTrace()
+        } catch (e: BadPaddingException) {
+            e.printStackTrace()
+        } catch (e: InvalidKeySpecException) {
+            e.printStackTrace()
+        } catch (e: InvalidAlgorithmParameterException) {
+            e.printStackTrace()
+        }
     }
 
     fun postEncryptedMessage(encryptedMessage: EncryptedMessage) {
