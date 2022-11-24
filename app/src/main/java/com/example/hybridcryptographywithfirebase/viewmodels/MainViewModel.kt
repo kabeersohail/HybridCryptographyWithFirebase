@@ -17,6 +17,7 @@ import com.google.firebase.database.FirebaseDatabase
 import java.nio.charset.Charset
 import java.security.*
 import java.security.spec.InvalidKeySpecException
+import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.*
 import javax.crypto.spec.IvParameterSpec
@@ -33,7 +34,7 @@ class MainViewModel: ViewModel() {
     val publicKeyOfServer: LiveData<String> = _publicKeyOfServer
 
     private val firebaseDatabase = FirebaseDatabase.getInstance()
-    val databaseReference: DatabaseReference = firebaseDatabase.getReference(CRYPTOGRAPHY)
+    private val databaseReference: DatabaseReference = firebaseDatabase.getReference(CRYPTOGRAPHY)
 
     private val _encryptedMessage: MutableLiveData<EncryptedMessage> = MutableLiveData()
     val encryptedMessage: LiveData<EncryptedMessage> = _encryptedMessage
@@ -41,11 +42,11 @@ class MainViewModel: ViewModel() {
     /**
      * This method fetches user name available on Firebase node
      */
-    suspend fun getCurrentValueFromFirebaseNode(): Long = suspendCoroutine { continuation ->
+    suspend fun getEncryptedMessageFromFirebase(): EncryptedMessage = suspendCoroutine { continuation ->
         databaseReference.child(Constants.VALUE).get().addOnCompleteListener { task ->
             if(task.isSuccessful) {
                 when(val currentValue = task.result?.value.also { Log.d(TAG, "$it") }) {
-                    is Long -> continuation.resume(currentValue)
+                    is EncryptedMessage -> continuation.resume(currentValue)
                     else -> Log.d(TAG, "Current value is null")
                 }
             }
@@ -107,6 +108,48 @@ class MainViewModel: ViewModel() {
         } catch (e: BadPaddingException) {
             e.printStackTrace()
         } catch (e: InvalidKeySpecException) {
+            e.printStackTrace()
+        } catch (e: InvalidAlgorithmParameterException) {
+            e.printStackTrace()
+        }
+    }
+
+    fun decryptMessage(serverPrivateKey: String, encryptedSecretKeyString: String, encryptedTextString: String) {
+        try {
+
+            // 1. Get private key
+            val privateSpec = PKCS8EncodedKeySpec(Base64.decode(serverPrivateKey, Base64.DEFAULT))
+            val keyFactory = KeyFactory.getInstance("RSA")
+            val privateKey = keyFactory.generatePrivate(privateSpec)
+
+            // 2. Decrypt encrypted secret key using private key
+            val cipher1 = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding")
+            cipher1.init(Cipher.DECRYPT_MODE, privateKey)
+            val secretKeyBytes =
+                cipher1.doFinal(Base64.decode(encryptedSecretKeyString, Base64.DEFAULT))
+            val secretKey: SecretKey = SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.size, "AES")
+
+            // 3. Decrypt encrypted text using secret key
+            val raw = secretKey.encoded
+            val skeySpec = SecretKeySpec(raw, "AES")
+            val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+            cipher.init(Cipher.DECRYPT_MODE, skeySpec, IvParameterSpec(ByteArray(16)))
+            val original = cipher.doFinal(Base64.decode(encryptedTextString, Base64.DEFAULT))
+            val text = String(original, Charset.forName("UTF-8"))
+
+            // 4. Print the original text sent by client
+            println("text\n$text\n\n")
+        } catch (e: NoSuchAlgorithmException) {
+            e.printStackTrace()
+        } catch (e: InvalidKeySpecException) {
+            e.printStackTrace()
+        } catch (e: InvalidKeyException) {
+            e.printStackTrace()
+        } catch (e: NoSuchPaddingException) {
+            e.printStackTrace()
+        } catch (e: IllegalBlockSizeException) {
+            e.printStackTrace()
+        } catch (e: BadPaddingException) {
             e.printStackTrace()
         } catch (e: InvalidAlgorithmParameterException) {
             e.printStackTrace()

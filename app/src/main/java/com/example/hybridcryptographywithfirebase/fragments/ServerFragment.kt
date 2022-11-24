@@ -10,9 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.hybridcryptographywithfirebase.databinding.FragmentServerBinding
+import com.example.hybridcryptographywithfirebase.models.EncryptedMessage
 import com.example.hybridcryptographywithfirebase.utils.Constants.SERVER_PRIVATE_KEY
 import com.example.hybridcryptographywithfirebase.utils.Constants.SERVER_PUBLIC_KEY
-import com.example.hybridcryptographywithfirebase.utils.Constants.VALUE
 import com.example.hybridcryptographywithfirebase.utils.TAG
 import com.example.hybridcryptographywithfirebase.viewmodels.MainViewModel
 import kotlinx.coroutines.launch
@@ -52,10 +52,16 @@ class ServerFragment : Fragment() {
             }
         }
 
-
         binding.subtraction.setOnClickListener {
-            lifecycleScope.launch {
-                viewModel.apply { databaseReference.child(VALUE).setValue(getCurrentValueFromFirebaseNode() - 1) }
+            requireActivity().getPreferences(Context.MODE_PRIVATE).apply {
+                val privateKey: String = getString(SERVER_PRIVATE_KEY, "") ?: return@setOnClickListener
+
+                if(privateKey.isNotEmpty()) {
+                    lifecycleScope.launch {
+                        val encryptedMessage: EncryptedMessage = viewModel.getEncryptedMessageFromFirebase()
+                        viewModel.decryptMessage(privateKey, encryptedMessage.encryptedSecretKey, encryptedMessage.encryptedMessage)
+                    }
+                }
             }
         }
     }
