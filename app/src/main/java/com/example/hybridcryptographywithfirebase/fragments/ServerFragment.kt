@@ -43,6 +43,7 @@ class ServerFragment : Fragment() {
         viewModel.publicKeyOfServer.observe(viewLifecycleOwner) { publicKey ->
             saveInSharedPreference(SERVER_PUBLIC_KEY, publicKey).also {
                 Log.d(TAG, "Public key is $publicKey")
+                viewModel.postPublicKey(publicKey)
             }
         }
 
@@ -52,7 +53,11 @@ class ServerFragment : Fragment() {
             }
         }
 
-        binding.subtraction.setOnClickListener {
+        viewModel.decryptedMessage.observe(viewLifecycleOwner) {
+            viewModel.postDecryptedMessage(it)
+        }
+
+        binding.decrypt.setOnClickListener {
             requireActivity().getPreferences(Context.MODE_PRIVATE).apply {
                 val privateKey: String = getString(SERVER_PRIVATE_KEY, "") ?: return@setOnClickListener
 

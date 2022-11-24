@@ -13,4 +13,6 @@ object Constants {
     const val RSA_TRANSFORMATION = "RSA/ECB/OAEPWithSHA1AndMGF1Padding"
     const val IV_BUFFER = 16
     const val ENCRYPTED_MESSAGE = "encryptedMessage"
+    const val DECRYPTED_MESSAGE = "decryptedMessage"
+    const val MY_DEVICE= "myDevice"
 }

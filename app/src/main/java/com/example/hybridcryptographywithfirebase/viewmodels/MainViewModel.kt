@@ -8,9 +8,12 @@ import androidx.lifecycle.ViewModel
 import com.example.hybridcryptographywithfirebase.models.EncryptedMessage
 import com.example.hybridcryptographywithfirebase.utils.Constants
 import com.example.hybridcryptographywithfirebase.utils.Constants.CRYPTOGRAPHY
+import com.example.hybridcryptographywithfirebase.utils.Constants.DECRYPTED_MESSAGE
 import com.example.hybridcryptographywithfirebase.utils.Constants.ENCRYPTED_MESSAGE
+import com.example.hybridcryptographywithfirebase.utils.Constants.MY_DEVICE
 import com.example.hybridcryptographywithfirebase.utils.Constants.RSA_CRYPTO_ALGORITHM
 import com.example.hybridcryptographywithfirebase.utils.Constants.RSA_KEY_SIZE
+import com.example.hybridcryptographywithfirebase.utils.Constants.SERVER_PUBLIC_KEY
 import com.example.hybridcryptographywithfirebase.utils.TAG
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -39,15 +42,23 @@ class MainViewModel: ViewModel() {
     private val _encryptedMessage: MutableLiveData<EncryptedMessage> = MutableLiveData()
     val encryptedMessage: LiveData<EncryptedMessage> = _encryptedMessage
 
+    private val _decryptedMessage: MutableLiveData<String> = MutableLiveData()
+    val decryptedMessage: LiveData<String> = _decryptedMessage
+
     /**
      * This method fetches user name available on Firebase node
      */
     suspend fun getEncryptedMessageFromFirebase(): EncryptedMessage = suspendCoroutine { continuation ->
-        databaseReference.child(Constants.VALUE).get().addOnCompleteListener { task ->
+        databaseReference.child(MY_DEVICE).child(ENCRYPTED_MESSAGE).get().addOnCompleteListener { task ->
             if(task.isSuccessful) {
                 when(val currentValue = task.result?.value.also { Log.d(TAG, "$it") }) {
-                    is EncryptedMessage -> continuation.resume(currentValue)
-                    else -> Log.d(TAG, "Current value is null")
+                    is HashMap<*, *> -> {
+                        val map: Map<String, String> = currentValue as? Map<String, String> ?: return@addOnCompleteListener
+                        continuation.resume(EncryptedMessage.from(map))
+                    }
+                    else -> {
+                        Log.d(TAG, "Current value is null ${currentValue?.javaClass?.name}")
+                    }
                 }
             }
         }
@@ -137,6 +148,8 @@ class MainViewModel: ViewModel() {
             val original = cipher.doFinal(Base64.decode(encryptedTextString, Base64.DEFAULT))
             val text = String(original, Charset.forName("UTF-8"))
 
+            _decryptedMessage.postValue(text)
+
             // 4. Print the original text sent by client
             println("text\n$text\n\n")
         } catch (e: NoSuchAlgorithmException) {
@@ -157,7 +170,26 @@ class MainViewModel: ViewModel() {
     }
 
     fun postEncryptedMessage(encryptedMessage: EncryptedMessage) {
-        databaseReference.child(ENCRYPTED_MESSAGE).setValue(encryptedMessage)
+        databaseReference.child(MY_DEVICE).child(ENCRYPTED_MESSAGE).setValue(encryptedMessage)
+    }
+
+    fun postDecryptedMessage(decryptedMessage: String) {
+        databaseReference.child(MY_DEVICE).child(DECRYPTED_MESSAGE).setValue(decryptedMessage)
+    }
+
+    fun postPublicKey(publicKey: String) {
+        databaseReference.child(MY_DEVICE).child(SERVER_PUBLIC_KEY).setValue(publicKey)
+    }
+
+    suspend fun getServerPublicKey(): String = suspendCoroutine { continuation ->
+        databaseReference.child(MY_DEVICE).child(SERVER_PUBLIC_KEY).get().addOnCompleteListener { task ->
+            if(task.isSuccessful) {
+                when(val currentValue = task.result?.value.also { Log.d(TAG, "$it") }) {
+                    is String -> continuation.resume(currentValue)
+                    else -> Log.d(TAG, "Current value is null")
+                }
+            }
+        }
     }
 
 }

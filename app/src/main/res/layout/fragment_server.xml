@@ -13,8 +13,8 @@
         tools:context=".fragments.ServerFragment">
 
         <Button
-            android:id="@+id/subtraction"
-            android:text="@string/subtraction"
+            android:id="@+id/decrypt"
+            android:text="@string/decrypt"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"

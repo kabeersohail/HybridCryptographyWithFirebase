@@ -2,16 +2,15 @@ package com.example.hybridcryptographywithfirebase.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.example.hybridcryptographywithfirebase.databinding.FragmentClientBinding
-import com.example.hybridcryptographywithfirebase.utils.Constants.SERVER_PUBLIC_KEY
-import com.example.hybridcryptographywithfirebase.utils.TAG
 import com.example.hybridcryptographywithfirebase.viewmodels.MainViewModel
+import kotlinx.coroutines.launch
 
 class ClientFragment : Fragment() {
 
@@ -34,13 +33,9 @@ class ClientFragment : Fragment() {
             val inputMessage: String = binding.messageToBeEncrypted.text.toString()
 
             requireActivity().getPreferences(Context.MODE_PRIVATE).apply {
-
-                val serverPublicKey: String = getString(SERVER_PUBLIC_KEY, "") ?: run {
-                    Log.d(TAG, "Server's public key is null")
-                    return@setOnClickListener
+                lifecycleScope.launch {
+                    viewModel.encryptMessage(viewModel.getServerPublicKey(), inputMessage)
                 }
-
-                viewModel.encryptMessage(serverPublicKey, inputMessage)
             }
         }
 
