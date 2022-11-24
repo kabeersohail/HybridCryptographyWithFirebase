@@ -12,13 +12,25 @@
         android:layout_height="match_parent"
         tools:context=".fragments.ClientFragment">
 
-        <Button
-            android:id="@+id/add"
-            android:text="@string/add"
+        <EditText
+            android:id="@+id/message_to_be_encrypted"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            android:padding="15dp"
             app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="match_parent"
             app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="Message to be encrypted"
+            android:inputType="textShortMessage"
+            tools:ignore="LabelFor" />
+
+        <Button
+            android:id="@+id/encrypt_and_send"
+            android:text="@string/encrypt_and_send"
+            app:layout_constraintTop_toBottomOf="@id/message_to_be_encrypted"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
