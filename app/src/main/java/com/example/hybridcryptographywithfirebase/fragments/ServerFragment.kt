@@ -53,8 +53,9 @@ class ServerFragment : Fragment() {
             }
         }
 
-        viewModel.decryptedMessage.observe(viewLifecycleOwner) {
-            viewModel.postDecryptedMessage(it)
+        viewModel.decryptedMessage.observe(viewLifecycleOwner) { decryptedMessage ->
+//            viewModel.postDecryptedMessage(decryptedMessage)
+            binding.decryptedText.text = decryptedMessage
         }
 
         binding.decrypt.setOnClickListener {
