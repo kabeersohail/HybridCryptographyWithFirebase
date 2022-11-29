@@ -58,7 +58,7 @@ class HomeFragment : Fragment() {
 
         viewModel.broadcastMessages.observe(viewLifecycleOwner) {
             val webView: WebView = LayoutInflater.from(requireContext()).inflate(R.layout.single_item, null, false) as WebView
-            webView.loadData(it.broadcastMessages.last(), MIME_TYPE , ENCODING)
+            webView.loadUrl(it.broadcastMessages.last())
             views.add(views.size, webView)
 
             pagerAdapter.notifyDataSetChanged()
