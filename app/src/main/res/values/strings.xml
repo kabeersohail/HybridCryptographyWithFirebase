@@ -5,4 +5,5 @@
     <string name="client">Client</string>
     <string name="server">Server</string>
     <string name="decrypt">Decrypt</string>
+    <string name="viewpager2">ViewPager2</string>
 </resources>

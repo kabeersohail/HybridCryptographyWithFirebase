@@ -12,23 +12,14 @@
         android:layout_height="match_parent"
         tools:context=".fragments.HomeFragment">
 
-        <Button
-            android:text="@string/client"
-            app:layout_constraintBottom_toTopOf="@id/server"
-            android:id="@+id/client"
+        <TextView
+            android:textStyle="bold"
+            android:textSize="24sp"
+            android:text="@string/viewpager2"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <Button
-            android:text="@string/server"
-            app:layout_constraintTop_toBottomOf="@id/client"
-            android:id="@+id/server"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
