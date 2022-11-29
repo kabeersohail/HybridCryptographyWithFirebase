@@ -34,20 +34,23 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        /**
-         * Try write to firebase with initial schema
-         */
-        viewModel.writeSchema().addOnCompleteListener {
-            when(it.isSuccessful) {
-                true -> {
-                    /**
-                     * Once write is successful, start listening to firebase node
-                     */
-                    viewModel.listenToViewPagerNode()
-                }
-                false -> Toast.makeText(requireContext(), "Write to node failed", Toast.LENGTH_SHORT).show()
-            }
-        }
+//        /**
+//         * Try write to firebase with initial schema
+//         */
+//        viewModel.writeSchema().addOnCompleteListener {
+//            when(it.isSuccessful) {
+//                true -> {
+//                    /**
+//                     * Once write is successful, start listening to firebase node
+//                     */
+//                    viewModel.listenToViewPagerNode()
+//                }
+//                false -> Toast.makeText(requireContext(), "Write to node failed", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+
+        viewModel.listenToViewPagerNode()
+
 
         val viewPager: ViewPager = binding.pager
         val views: MutableList<View> = ArrayList()
@@ -57,8 +60,14 @@ class HomeFragment : Fragment() {
         }
 
         viewModel.broadcastMessages.observe(viewLifecycleOwner) {
+
+            if(it.broadcastMessages.isNotEmpty() && viewPager.currentItem > 0) {
+                binding.prev.visibility = View.VISIBLE
+                binding.next.visibility = View.VISIBLE
+            }
+
             val webView: WebView = LayoutInflater.from(requireContext()).inflate(R.layout.single_item, null, false) as WebView
-            webView.loadUrl(it.broadcastMessages.last())
+            webView.loadData(it.broadcastMessages.last(), MIME_TYPE , ENCODING)
             views.add(views.size, webView)
 
             pagerAdapter.notifyDataSetChanged()
@@ -75,5 +84,24 @@ class HomeFragment : Fragment() {
                 throw e
             }
         }
+
+        binding.prev.setOnClickListener {
+            if(viewPager.currentItem != 0) {
+                viewPager.currentItem = viewPager.currentItem - 1
+            }
+        }
+
+        binding.next.setOnClickListener {
+            try {
+                if(viewPager.size - 1 == viewPager.currentItem) {
+                    requireActivity().finish()
+                } else {
+                    viewPager.currentItem = viewPager.currentItem + 1
+                }
+            } catch (e: Exception) {
+                throw e
+            }
+        }
+
     }
 }
