@@ -7,4 +7,5 @@ object Constants {
 
     const val ENCODING = "UTF-8"
 
+    const val HTML_PAGE = "htmlPage"
 }

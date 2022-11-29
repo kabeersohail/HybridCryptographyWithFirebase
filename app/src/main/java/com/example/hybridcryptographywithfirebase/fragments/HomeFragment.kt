@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.example.hybridcryptographywithfirebase.R
 import com.example.hybridcryptographywithfirebase.databinding.FragmentHomeBinding
@@ -20,6 +21,7 @@ import com.example.hybridcryptographywithfirebase.utils.Constants.MIME_TYPE
 import com.example.hybridcryptographywithfirebase.utils.TAG
 import com.example.hybridcryptographywithfirebase.viewmodels.MainViewModel
 import com.example.hybridcryptographywithfirebase.viewpager.PagerAdapter
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
 
@@ -80,10 +82,12 @@ class HomeFragment : Fragment() {
                 /**
                  * On click of acknowledge button, update the list as well
                  */
-                broadcastMessages[viewPager.currentItem].status = Status.ACKNOWLEDGED.ordinal
+                broadcastMessages[getCurrentItem(viewPager)].status = Status.ACKNOWLEDGED.ordinal
 
-                val size = pagerAdapter.count - 1
-                val currentItem = viewPager.currentItem
+                Log.d(TAG, "$broadcastMessages")
+
+                val size = getPagerAdapterSize(pagerAdapter)
+                val currentItem = getCurrentItem(viewPager)
 
                 Log.d(TAG, "[${currentItem}] $size")
 
@@ -97,7 +101,7 @@ class HomeFragment : Fragment() {
                      * Enable previous button
                      */
                     binding.previous.visibility = View.VISIBLE
-                    viewPager.currentItem = viewPager.currentItem + 1
+                    viewPager.currentItem = getNextItem(viewPager)
                 }
             } catch (e: Exception) {
                 throw e
@@ -106,8 +110,9 @@ class HomeFragment : Fragment() {
 
         binding.previous.setOnClickListener {
 
-            val size = pagerAdapter.count - 1
-            val previous = viewPager.currentItem - 1
+            val size = getPagerAdapterSize(pagerAdapter)
+            val previous = getPreviousItem(viewPager)
+
             Log.d(TAG, "[${previous}] $size")
 
             /**
@@ -123,28 +128,24 @@ class HomeFragment : Fragment() {
                 binding.ack.isEnabled = false
             }
 
-            viewPager.currentItem = viewPager.currentItem - 1
+            viewPager.currentItem = getPreviousItem(viewPager)
         }
 
         binding.next.setOnClickListener {
-            /**
-             * OnClick of next button, Navigate to next page
-             */
-            viewPager.currentItem = viewPager.currentItem + 1
 
             /**
              * Make previous button enabled, if current item is already acknowledged
              */
-            if(broadcastMessages[viewPager.currentItem].status == Status.ACKNOWLEDGED.ordinal) binding.previous.visibility = View.VISIBLE
+            if(broadcastMessages[getCurrentItem(viewPager)].status == Status.ACKNOWLEDGED.ordinal) binding.previous.visibility = View.VISIBLE
 
             /**
              * If next item is the last item, then hide the next button
              */
-            val size = pagerAdapter.count - 1
-            val nextItem = viewPager.currentItem + 1
+            val size = getPagerAdapterSize(pagerAdapter)
+            val nextItem = getNextItem(viewPager)
+
             if(nextItem == size) {
                 binding.next.visibility = View.VISIBLE
-                return@setOnClickListener
             }
 
             if(nextItem > size) {
@@ -162,10 +163,31 @@ class HomeFragment : Fragment() {
                 }
                 else -> if(next.status == Status.NOT_ACKNOWLEDGED.ordinal) {
                     binding.next.visibility = View.INVISIBLE
+                    binding.ack.isEnabled = true
                 }
+            }
+
+            /**
+             * OnClick of next button, Navigate to next page
+             */
+            viewPager.currentItem = getNextItem(viewPager)
+
+        }
+
+        binding.add.setOnClickListener {
+            lifecycleScope.launch {
+                viewModel.addPage()
             }
         }
     }
+
+    private fun getCurrentItem(viewPager: ViewPager) = viewPager.currentItem
+
+    private fun getPreviousItem(viewPager: ViewPager) = viewPager.currentItem - 1
+
+    private fun getNextItem(viewPager: ViewPager) = viewPager.currentItem + 1
+
+    private fun getPagerAdapterSize(pagerAdapter: PagerAdapter) = pagerAdapter.count - 1
 
     override fun onDestroy() {
         super.onDestroy()
