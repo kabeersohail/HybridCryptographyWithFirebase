@@ -14,6 +14,8 @@ class MainViewModel: ViewModel() {
     private val firebaseDatabase = FirebaseDatabase.getInstance()
     private val viewPagerReference: DatabaseReference = firebaseDatabase.getReference(View_Pager)
 
+    var listener: ValueEventListener? = null
+
     private val _broadcastMessages: MutableLiveData<ViewPagerItem> = MutableLiveData()
     val broadcastMessages: LiveData<ViewPagerItem> = _broadcastMessages
 
@@ -35,6 +37,10 @@ class MainViewModel: ViewModel() {
 
     fun writeSchema() = viewPagerReference.setValue(ViewPagerItem())
 
-    fun listenToViewPagerNode() = viewPagerReference.addValueEventListener(viewPagerValueEventListener)
+    fun listenToViewPagerNode() {
+        listener = viewPagerReference.addValueEventListener(viewPagerValueEventListener)
+    }
+
+    fun removeValueEventListener() = viewPagerReference.removeEventListener(viewPagerValueEventListener)
 
 }
