@@ -12,16 +12,39 @@
         android:layout_height="match_parent"
         tools:context=".fragments.HomeFragment">
 
-        <Button
-            android:visibility="gone"
-            android:text="@string/previous"
-            android:id="@+id/previous"
-            app:layout_constraintTop_toTopOf="parent"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/navigation_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
             app:layout_constraintBottom_toTopOf="@id/pager"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <Button
+                android:visibility="invisible"
+                app:layout_constraintStart_toEndOf="@id/previous"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:id="@+id/next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/next" />
+
+            <Button
+                android:visibility="invisible"
+                app:layout_constraintEnd_toStartOf="@id/next"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:id="@+id/previous"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/previous" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.example.hybridcryptographywithfirebase.viewpager.CustomViewPager
             android:id="@+id/pager"
@@ -30,7 +53,7 @@
             app:layout_constraintBottom_toTopOf="@id/ack"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/previous">
+            app:layout_constraintTop_toBottomOf="@id/navigation_layout">
 
         </com.example.hybridcryptographywithfirebase.viewpager.CustomViewPager>
 

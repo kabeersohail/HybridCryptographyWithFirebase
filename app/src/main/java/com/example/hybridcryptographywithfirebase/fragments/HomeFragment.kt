@@ -113,10 +113,58 @@ class HomeFragment : Fragment() {
             /**
              * If previous item is the first, hide previous button
              */
-            if(previous == 0) binding.previous.visibility = View.GONE
+            if(previous == 0) binding.previous.visibility = View.INVISIBLE
+
+            /**
+             * If previous is already acknowledged, then make next button visible, and disable acknowledged button
+             */
+            if(broadcastMessages[previous].status == Status.ACKNOWLEDGED.ordinal) {
+                binding.next.visibility = View.VISIBLE
+                binding.ack.isEnabled = false
+            }
+
             viewPager.currentItem = viewPager.currentItem - 1
         }
 
+        binding.next.setOnClickListener {
+            /**
+             * OnClick of next button, Navigate to next page
+             */
+            viewPager.currentItem = viewPager.currentItem + 1
+
+            /**
+             * Make previous button enabled, if current item is already acknowledged
+             */
+            if(broadcastMessages[viewPager.currentItem].status == Status.ACKNOWLEDGED.ordinal) binding.previous.visibility = View.VISIBLE
+
+            /**
+             * If next item is the last item, then hide the next button
+             */
+            val size = pagerAdapter.count - 1
+            val nextItem = viewPager.currentItem + 1
+            if(nextItem == size) {
+                binding.next.visibility = View.VISIBLE
+                return@setOnClickListener
+            }
+
+            if(nextItem > size) {
+                binding.next.visibility = View.INVISIBLE
+                binding.ack.isEnabled = true
+            }
+
+            /**
+             * Enable Acknowledge button and hide next button, if the next item is not yet acknowledged
+             */
+
+            when(val next: SingleItem? = broadcastMessages.getOrNull(nextItem)) {
+                null -> {
+                    Log.d(TAG, "null")
+                }
+                else -> if(next.status == Status.NOT_ACKNOWLEDGED.ordinal) {
+                    binding.next.visibility = View.INVISIBLE
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
