@@ -65,19 +65,16 @@ class HomeFragment : Fragment() {
         viewModel.broadcastMessages.observe(viewLifecycleOwner) {
 
             val webView: WebView = LayoutInflater.from(requireContext()).inflate(R.layout.single_item, ConstraintLayout(requireContext()), false) as WebView
-            webView.loadData(it.broadcastMessages.last(), MIME_TYPE , ENCODING)
+            webView.loadData(it.htmlPage, MIME_TYPE , ENCODING)
             views.add(views.size, webView)
-
             pagerAdapter.notifyDataSetChanged()
         }
 
         binding.ack.setOnClickListener {
             try {
                 val size = pagerAdapter.count - 1
-                Log.d(TAG, "$size")
-
                 val currentItem = viewPager.currentItem
-                Log.d(TAG, "$currentItem")
+                Log.d(TAG, "[$currentItem] [$size]")
                 if(currentItem >=  size) {
                     requireActivity().finish()
                 } else {
