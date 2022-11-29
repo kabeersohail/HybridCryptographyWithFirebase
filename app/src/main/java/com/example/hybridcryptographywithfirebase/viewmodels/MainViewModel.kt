@@ -26,7 +26,6 @@ class MainViewModel: ViewModel() {
                 return
             }
 
-            Log.d(TAG, "$data")
             _broadcastMessages.postValue(data)
         }
 

@@ -12,15 +12,25 @@
         android:layout_height="match_parent"
         tools:context=".fragments.HomeFragment">
 
-        <com.example.hybridcryptographywithfirebase.viewpager.CustomViewPager
+        <Button
+            android:visibility="gone"
+            android:text="@string/previous"
+            android:id="@+id/previous"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/pager"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
+        <com.example.hybridcryptographywithfirebase.viewpager.CustomViewPager
             android:id="@+id/pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@id/ack"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/previous">
 
         </com.example.hybridcryptographywithfirebase.viewpager.CustomViewPager>
 
